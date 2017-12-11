@@ -1,25 +1,20 @@
 package sample;
 
 import javafx.application.Application;
-import javafx.event.EventHandler;
-import javafx.event.WeakEventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-import java.util.Random;
-
 public class Main extends Application {
 
-    public static final int WIDTH = 700;
-    public static final int HEIGHT = 700;
+    public static final int WIDTH = 900;
+    public static final int HEIGHT = 900;
     Maze maze;
 
     @Override
@@ -29,35 +24,7 @@ public class Main extends Application {
         primaryStage.setTitle("MazeRunner");
 
         Canvas canvas = new Canvas(WIDTH, HEIGHT);
-        canvas.setOnKeyTyped(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                switch (event.getCode()) {
-                    case W:
-                        System.out.println("W pressed");
-                        break;
-                    case A:
-                        System.out.println("A pressed");
-                        break;
-                    case S:
-                        System.out.println("S pressed");
-                        break;
-                    case D:
-                        System.out.println("D pressed");
-                        break;
-                    default:
-                        System.out.println("Other key was pressed (" + event.getCode() + ")");
-                        break;
-                }
-            }
-        });
-        canvas.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                System.out.println("Mouse event!");
-                System.out.println(event);
-            }
-        });
+        canvas.setOnMouseClicked(e -> advanceTime());
         GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
         graphicsContext.setLineWidth(5);
 
@@ -73,41 +40,65 @@ public class Main extends Application {
         primaryStage.show();
     }
 
+    public void advanceTime () {
+        maze.robot.makeMove();
+        MazeCell current = maze.cells[maze.robot.getxLoc()][maze.robot.getyLoc()];
+        maze.robot.pickUp(current);
+    }
+
+
+    public static final int PADDING = 10;
+    public static final int CELL_SIZE = 70;
+    public static final int CENTER = PADDING + CELL_SIZE / 2;
+    public static final int SCALE = PADDING + CELL_SIZE;
     public void paintMaze (GraphicsContext gc) {
         for (int x = 0; x < 10; x++) {
             for (int y = 0; y < 10; y++) {
-                gc.strokeRect(10 + 60 * x, 10 + 60 * y, 50, 50);
-
-                //Center
-                gc.setStroke(Color.color(1, 0, 0));
-                //gc.strokeRect(34 + 60 * x, 34 + 60 * y, 1, 1);
-                gc.setStroke(Color.color(0, 0, 0));
+                gc.strokeRect(PADDING + SCALE * x, PADDING + SCALE * y, CELL_SIZE, CELL_SIZE);
+                if (maze.cells[x][y].gem != null) {
+                    switch (maze.cells[x][y].gem) {
+                        case RED:
+                            gc.setStroke(Color.color(1, 0, 0));
+                            break;
+                        case GREEN:
+                            gc.setStroke(Color.color(0, 1, 0));
+                            break;
+                        case YELLOW:
+                            gc.setStroke(Color.color(1, 1, 0));
+                            break;
+                    }
+                    gc.strokeOval(CENTER + SCALE * x, CENTER + SCALE * y, 20, 20);
+                    gc.setStroke(Color.color(0,0,0));
+                }
             }
         }
         gc.setStroke(Color.color(0, 0, 1));
         for (int x = 0; x < 10; x++) {
             for (int y = 0; y < 10; y++) {
                 MazeCell current = maze.cells[x][y];
-                int centerX = 34 + 60 * x;
-                int centerY = 34 + 60 * y;
+                int centerX = CENTER + SCALE * x;
+                int centerY = CENTER + SCALE * y;
+                //I believe every line gets drawn twice. Oh well.
                 if (current.nConnection != null) {
-                    gc.strokeLine(centerX, centerY, centerX, centerY - 60);
+                    gc.strokeLine(centerX, centerY, centerX, centerY - SCALE);
                 }
                 if (current.eConnection != null) {
-                    gc.strokeLine(centerX, centerY, centerX + 60, centerY);
+                    gc.strokeLine(centerX, centerY, centerX + SCALE, centerY);
                 }
                 if (current.sConnection != null) {
-                    gc.strokeLine(centerX, centerY, centerX, centerY + 60);
+                    gc.strokeLine(centerX, centerY, centerX, centerY + SCALE);
                 }
                 if (current.wConnection != null) {
-                    gc.strokeLine(centerX, centerY, centerX - 60, centerY);
+                    gc.strokeLine(centerX, centerY, centerX - SCALE, centerY);
                 }
             }
         }
-        gc.setStroke(Color.color(0, 1, 0));
-        gc.fillText("S", 34 + 60 * maze.start.xLoc, 34 + 60 * maze.start.yLoc);
-        gc.fillText("E", 34 + 60 * maze.end.xLoc, 34 + 60 * maze.end.yLoc);
-        gc.fillText("R", 34 + 60 * maze.robot.getxLoc(), 34 + 60 * maze.robot.getyLoc());
+        gc.fillText("S", CENTER + SCALE * maze.start.xLoc, CENTER + SCALE * maze.start.yLoc);
+        gc.fillText("E", CENTER + SCALE * maze.end.xLoc, CENTER + SCALE * maze.end.yLoc);
+        Image octoCat = new Image("megacat4.png");
+        Image arm = new Image("arm.png");
+        gc.drawImage(octoCat, CENTER / 2+ SCALE * maze.robot.getxLoc(), CENTER / 2 + SCALE * maze.robot.getyLoc(), 40, 40);
+        gc.drawImage(arm, CENTER / 2 + SCALE * maze.armLoc.xLoc, CENTER / 2 + SCALE * maze.armLoc.yLoc, 40, 40);
     }
 
 
