@@ -17,6 +17,8 @@ public class Main extends Application {
     public static final int HEIGHT = 900;
     Maze maze;
 
+    GraphicsContext gc;
+
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
@@ -25,25 +27,33 @@ public class Main extends Application {
 
         Canvas canvas = new Canvas(WIDTH, HEIGHT);
         canvas.setOnMouseClicked(e -> advanceTime());
-        GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-        graphicsContext.setLineWidth(5);
+        gc = canvas.getGraphicsContext2D();
+        gc.setLineWidth(5);
 
-        graphicsContext.setStroke(Color.color(0, 0, 0));
+        gc.setStroke(Color.color(0, 0, 0));
 
         Group rootGroup = new Group();
         rootGroup.getChildren().add(canvas);
 
-        paintMaze(graphicsContext);
+        paintMaze(gc);
 
         Scene scene = new Scene(rootGroup, WIDTH, HEIGHT);
         primaryStage.setScene(scene);
         primaryStage.show();
+    /*
+        while (true) {
+            Thread.sleep(1000);
+
+            advanceTime();
+            paintMaze(graphicsContext);
+        }*/
     }
 
     public void advanceTime () {
         maze.robot.makeMove();
         MazeCell current = maze.cells[maze.robot.getxLoc()][maze.robot.getyLoc()];
-        maze.robot.pickUp(current);
+        maze.robot.pickUp();
+        paintMaze(gc);
     }
 
 
@@ -52,6 +62,8 @@ public class Main extends Application {
     public static final int CENTER = PADDING + CELL_SIZE / 2;
     public static final int SCALE = PADDING + CELL_SIZE;
     public void paintMaze (GraphicsContext gc) {
+        gc.clearRect(0, 0, WIDTH, HEIGHT);
+        gc.setStroke(Color.color(0,0,0));
         for (int x = 0; x < 10; x++) {
             for (int y = 0; y < 10; y++) {
                 gc.strokeRect(PADDING + SCALE * x, PADDING + SCALE * y, CELL_SIZE, CELL_SIZE);
@@ -94,11 +106,13 @@ public class Main extends Application {
             }
         }
         gc.fillText("S", CENTER + SCALE * maze.start.xLoc, CENTER + SCALE * maze.start.yLoc);
-        gc.fillText("E", CENTER + SCALE * maze.end.xLoc, CENTER + SCALE * maze.end.yLoc);
+        gc.fillText("E", CENTER + SCALE * maze.exit.xLoc, CENTER + SCALE * maze.exit.yLoc);
         Image octoCat = new Image("megacat4.png");
         Image arm = new Image("arm.png");
         gc.drawImage(octoCat, CENTER / 2+ SCALE * maze.robot.getxLoc(), CENTER / 2 + SCALE * maze.robot.getyLoc(), 40, 40);
-        gc.drawImage(arm, CENTER / 2 + SCALE * maze.armLoc.xLoc, CENTER / 2 + SCALE * maze.armLoc.yLoc, 40, 40);
+        if (maze.armLoc.hasArm) {
+            gc.drawImage(arm, CENTER / 2 + SCALE * maze.armLoc.xLoc, CENTER / 2 + SCALE * maze.armLoc.yLoc, 40, 40);
+        }
     }
 
 

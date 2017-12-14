@@ -16,6 +16,12 @@ public class MazeCell {
     int yLoc;
 
     Gem gem;
+    boolean hasArm = false;
+
+    boolean isExit;
+    Maze exitBackRef;
+
+    private int movesSinceVisit = 0;
 
     public MazeCell(int xLoc, int yLoc) {
         this.xLoc = xLoc;
@@ -26,6 +32,11 @@ public class MazeCell {
         this.xLoc = xLoc;
         this.yLoc = yLoc;
         this.gem = gem;
+    }
+
+    public void setExit (Maze exitBackRef) {
+        this.exitBackRef = exitBackRef;
+        isExit = true;
     }
 
     public boolean isConnectedTo (MazeCell otherCell) {
@@ -83,5 +94,32 @@ public class MazeCell {
             connectedCells.add(wConnection);
         }
         return connectedCells;
+    }
+
+    public boolean checkExit () {
+        if (isExit) {
+            //check gems. can use backref
+            SmartBot robot = exitBackRef.robot;
+            if (robot.getRedGems() >= exitBackRef.requiredReds &&
+                robot.getGreenGems() >= exitBackRef.requiredGreens &&
+                robot.getYellowGems() >= exitBackRef.requiredYellows) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void increaseMovesSinceVisit () {
+        movesSinceVisit++;
+    }
+
+    public void decreaseMovesSinceVisit () {
+        if (movesSinceVisit > 0) {
+            movesSinceVisit--;
+        }
+    }
+
+    public int getMovesSinceVisit() {
+        return movesSinceVisit;
     }
 }

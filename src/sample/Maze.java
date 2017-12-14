@@ -8,7 +8,7 @@ import java.util.Set;
 public class Maze {
 
     MazeCell start;
-    MazeCell end;
+    MazeCell exit;
     MazeCell[][] cells;
     Random random;
 
@@ -20,6 +20,10 @@ public class Maze {
     int reds = 0;
     int greens = 0;
     int yellows = 0;
+
+    int requiredReds;
+    int requiredGreens;
+    int requiredYellows;
 
     public Maze () {
         cells = new MazeCell[10][10];
@@ -33,35 +37,58 @@ public class Maze {
         random = new Random();
         start = cells[random.nextInt(10)][random.nextInt(10)];
 
-        robot = new SmartBot(start.xLoc, start.yLoc);
-        end = cells[random.nextInt(10)][random.nextInt(10)];
+        robot = new SmartBot(start.xLoc, start.yLoc, start);
+        exit = cells[random.nextInt(10)][random.nextInt(10)];
+        exit.setExit(this);
 
         armLoc = cells[random.nextInt(10)][random.nextInt(10)];
+        armLoc.hasArm = true;
 
+        //Add 5 gems and record which colors we've added
         for (int i =0; i < 5; i++) {
             int x = random.nextInt(10);
             int y = random.nextInt(10);
-            cells[x][y].gem = Gem.getRandomGem();
-            importantLocations.add(cells[x][y]);
-            switch (cells[x][y].gem) {
-                case RED:
-                    reds++;
-                    break;
-                case GREEN:
-                    greens++;
-                    break;
-                case YELLOW:
-                    yellows++;
-                    break;
+            //If there's not already a gem here
+            if (cells[x][y].gem == null) {
+                cells[x][y].gem = Gem.getRandomGem();
+                importantLocations.add(cells[x][y]);
+                switch (cells[x][y].gem) {
+                    case RED:
+                        reds++;
+                        break;
+                    case GREEN:
+                        greens++;
+                        break;
+                    case YELLOW:
+                        yellows++;
+                        break;
+                }
+            } else { //Otherwise try again
+                i--;
             }
         }
 
         System.out.println("Created gems (RGY): " + reds + " " + greens + " " + yellows);
 
+        //Determine gems required for exit:
+        if (reds > 0) {
+            requiredReds = random.nextInt(reds);
+        }
+        if (greens > 0) {
+            requiredGreens = random.nextInt(greens);
+        }
+        if (yellows > 0) {
+            requiredYellows = random.nextInt(yellows);
+        }
+
+
+
+        System.out.println("This maze requires (RGY)" + requiredReds + " " + requiredGreens + " " + requiredYellows);
+
         System.out.println("Start = (" + start.xLoc + ", " + start.yLoc + ")");
-        System.out.println("End = (" + end.xLoc + ", " + end.yLoc + ")");
+        System.out.println("End = (" + exit.xLoc + ", " + exit.yLoc + ")");
         importantLocations.add(start);
-        importantLocations.add(end);
+        importantLocations.add(exit);
         importantLocations.add(armLoc);
         createRandomConnections();
         //removeSomeConnections();
